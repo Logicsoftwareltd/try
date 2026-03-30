@@ -1,0 +1,786 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Logic Software — Document Verification Portal</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --slate-900: #0f172a;
+      --slate-800: #1e293b;
+      --slate-700: #334155;
+      --slate-600: #475569;
+      --slate-500: #64748b;
+      --slate-400: #94a3b8;
+      --slate-300: #cbd5e1;
+      --slate-200: #e2e8f0;
+      --slate-100: #f1f5f9;
+      --slate-50:  #f8fafc;
+      --emerald-900: #064e3b;
+      --emerald-700: #047857;
+      --emerald-600: #059669;
+      --emerald-500: #10b981;
+      --emerald-200: #a7f3d0;
+      --emerald-100: #d1fae5;
+      --emerald-50:  #ecfdf5;
+      --blue-700: #1d4ed8;
+      --blue-600: #2563eb;
+      --blue-400: #60a5fa;
+      --blue-100: #dbeafe;
+      --blue-50:  #eff6ff;
+      --red-600: #dc2626;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--slate-100);
+      min-height: 100vh;
+      padding: 2.5rem 1rem;
+      color: var(--slate-900);
+    }
+
+    /* === PAGE WRAPPER === */
+    .portal-wrapper {
+      max-width: 780px;
+      margin: 0 auto;
+      background: #fff;
+      border-radius: 20px;
+      box-shadow: 0 4px 6px rgba(0,0,0,.04), 0 20px 60px rgba(0,0,0,.08);
+      overflow: hidden;
+      opacity: 0;
+      transform: translateY(24px);
+      animation: fadeUp .8s cubic-bezier(.22,.68,0,1.2) .1s forwards;
+    }
+
+    @keyframes fadeUp {
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* === HEADER === */
+    .portal-header {
+      background: var(--slate-900);
+      padding: 2.5rem 2.5rem 2rem;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .portal-header::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image: radial-gradient(circle at 2px 2px, rgba(255,255,255,.12) 1px, transparent 0);
+      background-size: 24px 24px;
+    }
+
+    .logo-wrap {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      justify-content: center;
+      margin-bottom: 1.5rem;
+    }
+
+    .portal-title {
+      position: relative;
+      z-index: 1;
+      font-family: 'DM Serif Display', serif;
+      font-size: 1.6rem;
+      color: #fff;
+      letter-spacing: .02em;
+    }
+
+    .portal-ref {
+      position: relative;
+      z-index: 1;
+      font-family: 'DM Mono', monospace;
+      font-size: .78rem;
+      color: var(--slate-400);
+      margin-top: .4rem;
+      letter-spacing: .04em;
+    }
+
+    /* === VERIFIED BANNER === */
+    .verified-banner {
+      background: var(--emerald-50);
+      border-bottom: 1px solid var(--emerald-100);
+      padding: 1.4rem 2.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .shimmer-overlay {
+      position: absolute;
+      inset: 0;
+      width: 200%;
+      background: linear-gradient(90deg, transparent 0%, rgba(167,243,208,.55) 50%, transparent 100%);
+      transform: skewX(-12deg) translateX(-100%);
+      animation: shimmer 3s linear infinite;
+      pointer-events: none;
+    }
+
+    @keyframes shimmer {
+      to { transform: skewX(-12deg) translateX(150%); }
+    }
+
+    .verified-left {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      position: relative;
+      z-index: 1;
+    }
+
+    .shield-icon {
+      background: var(--emerald-500);
+      border-radius: 50%;
+      width: 48px;
+      height: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 14px rgba(16,185,129,.3);
+      flex-shrink: 0;
+    }
+
+    .verified-label {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--emerald-900);
+    }
+
+    .verified-sub {
+      font-size: .82rem;
+      color: var(--emerald-700);
+      font-weight: 500;
+      margin-top: .15rem;
+    }
+
+    .verified-ts {
+      text-align: right;
+      position: relative;
+      z-index: 1;
+    }
+
+    .ts-label {
+      font-size: .65rem;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      font-weight: 700;
+      color: var(--emerald-600);
+    }
+
+    .ts-value {
+      font-family: 'DM Mono', monospace;
+      font-size: .8rem;
+      color: var(--emerald-900);
+      margin-top: .25rem;
+    }
+
+    /* === BODY === */
+    .portal-body {
+      padding: 2.5rem 2.5rem 2rem;
+    }
+
+    .section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 2rem;
+    }
+
+    .section-title {
+      font-family: 'DM Serif Display', serif;
+      font-size: 1.25rem;
+      color: var(--slate-900);
+      padding-bottom: .4rem;
+      border-bottom: 2.5px solid var(--blue-600);
+      display: inline-block;
+    }
+
+    .badge-row {
+      display: flex;
+      align-items: center;
+      gap: .6rem;
+      flex-wrap: wrap;
+    }
+
+    .copy-btn {
+      display: flex;
+      align-items: center;
+      gap: .35rem;
+      font-size: .72rem;
+      font-weight: 700;
+      padding: .35rem .75rem;
+      border-radius: 999px;
+      border: 1px solid var(--slate-200);
+      background: #fff;
+      color: var(--slate-600);
+      cursor: pointer;
+      transition: background .15s, color .15s;
+      font-family: 'DM Sans', sans-serif;
+    }
+
+    .copy-btn:hover { background: var(--slate-50); }
+    .copy-btn.copied { color: var(--emerald-600); border-color: var(--emerald-200); }
+
+    .type-badge {
+      font-size: .72rem;
+      font-weight: 700;
+      color: var(--blue-700);
+      background: var(--blue-50);
+      border: 1px solid var(--blue-100);
+      padding: .35rem .75rem;
+      border-radius: 999px;
+    }
+
+    /* === DETAIL GRID === */
+    .details-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2rem 3rem;
+    }
+
+    @media (max-width: 600px) {
+      .details-grid { grid-template-columns: 1fr; }
+      .verified-ts { display: none; }
+      .portal-body { padding: 1.75rem 1.25rem; }
+      .portal-header { padding: 2rem 1.25rem 1.5rem; }
+      .verified-banner { padding: 1.2rem 1.25rem; }
+    }
+
+    .detail-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 1rem;
+      opacity: 0;
+      transform: translateX(-8px);
+      animation: slideIn .5s cubic-bezier(.22,.68,0,1.2) forwards;
+    }
+
+    .detail-item:nth-child(1) { animation-delay: .25s; }
+    .detail-item:nth-child(2) { animation-delay: .35s; transform: translateX(8px); }
+    .detail-item:nth-child(3) { animation-delay: .45s; }
+    .detail-item:nth-child(4) { animation-delay: .55s; transform: translateX(8px); }
+
+    @keyframes slideIn {
+      to { opacity: 1; transform: translateX(0); }
+    }
+
+    .detail-icon {
+      background: var(--slate-50);
+      border: 1px solid var(--slate-200);
+      border-radius: 10px;
+      width: 44px;
+      height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      color: var(--blue-600);
+      transition: background .2s, border-color .2s;
+    }
+
+    .detail-item:hover .detail-icon {
+      background: var(--blue-50);
+      border-color: var(--blue-100);
+    }
+
+    .detail-label {
+      font-size: .75rem;
+      font-weight: 600;
+      color: var(--slate-500);
+      text-transform: uppercase;
+      letter-spacing: .05em;
+      margin-bottom: .25rem;
+    }
+
+    .detail-value {
+      font-size: 1.05rem;
+      font-weight: 600;
+      color: var(--slate-900);
+      line-height: 1.3;
+    }
+
+    .detail-value.mono {
+      font-family: 'DM Mono', monospace;
+      font-size: .95rem;
+    }
+
+    /* === DIVIDER === */
+    .divider {
+      border: none;
+      border-top: 1px solid var(--slate-100);
+      margin: 2rem 0;
+    }
+
+    /* === TRANSCRIPT BLOCK === */
+    .transcript-block {
+      background: var(--slate-50);
+      border: 1px solid var(--slate-200);
+      border-radius: 14px;
+      padding: 1.75rem;
+      opacity: 0;
+      transform: translateY(10px);
+      animation: fadeUp .5s cubic-bezier(.22,.68,0,1.2) .65s forwards;
+    }
+
+    .transcript-heading {
+      display: flex;
+      align-items: center;
+      gap: .6rem;
+      margin-bottom: 1.25rem;
+    }
+
+    .transcript-heading span {
+      font-size: .95rem;
+      font-weight: 700;
+      color: var(--slate-800);
+    }
+
+    .transcript-text {
+      font-family: 'DM Serif Display', serif;
+      font-style: italic;
+      font-size: .88rem;
+      color: var(--slate-600);
+      line-height: 1.85;
+    }
+
+    .transcript-text p + p { margin-top: .9rem; }
+
+    .transcript-text p:first-child {
+      font-family: 'DM Sans', sans-serif;
+      font-style: normal;
+      font-size: .75rem;
+      font-weight: 700;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      color: var(--slate-500);
+    }
+
+    /* === FOOTER === */
+    .portal-footer {
+      background: var(--slate-900);
+      color: var(--slate-300);
+      padding: 2rem 2.5rem;
+      border-top: 1px solid var(--slate-800);
+    }
+
+    .footer-main {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      flex-wrap: wrap;
+      gap: 1.5rem;
+    }
+
+    .signatory-label {
+      font-size: .65rem;
+      text-transform: uppercase;
+      letter-spacing: .1em;
+      font-weight: 700;
+      color: var(--slate-500);
+      margin-bottom: .4rem;
+    }
+
+    .signatory-name {
+      font-family: 'DM Serif Display', serif;
+      font-size: 1.15rem;
+      color: #fff;
+    }
+
+    .signatory-role {
+      font-size: .82rem;
+      color: var(--blue-400);
+      margin-top: .2rem;
+    }
+
+    .signatory-org {
+      font-size: .75rem;
+      color: var(--slate-400);
+      margin-top: .4rem;
+    }
+
+    .contact-info {
+      text-align: right;
+      font-size: .75rem;
+      color: var(--slate-400);
+      line-height: 1.8;
+    }
+
+    .contact-info a {
+      color: var(--blue-400);
+      text-decoration: none;
+      transition: color .15s;
+    }
+
+    .contact-info a:hover { color: #93c5fd; }
+
+    .contact-row {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: .4rem;
+    }
+
+    /* === FOOTER BOTTOM === */
+    .footer-bottom {
+      margin-top: 1.5rem;
+      padding-top: 1.25rem;
+      border-top: 1px solid var(--slate-800);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .hash-code {
+      font-family: 'DM Mono', monospace;
+      font-size: .65rem;
+      color: var(--slate-600);
+    }
+
+    .download-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: .5rem;
+      font-size: .82rem;
+      font-weight: 600;
+      padding: .55rem 1.1rem;
+      background: var(--slate-800);
+      color: #fff;
+      border-radius: 8px;
+      text-decoration: none;
+      transition: background .15s;
+      font-family: 'DM Sans', sans-serif;
+      cursor: pointer;
+      border: none;
+    }
+
+    .download-btn:hover { background: var(--slate-700); }
+
+    .print-note {
+      font-size: .68rem;
+      color: var(--slate-500);
+      font-style: italic;
+      margin-top: .4rem;
+      text-align: right;
+    }
+
+    /* === PDF SECTION === */
+    .pdf-section {
+      border-top: 1px solid var(--slate-100);
+      opacity: 0;
+      transform: translateY(10px);
+      animation: fadeUp .5s cubic-bezier(.22,.68,0,1.2) .8s forwards;
+    }
+
+    .pdf-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1rem 2.5rem;
+      background: var(--slate-50);
+      border-bottom: 1px solid var(--slate-200);
+    }
+
+    .pdf-header-left {
+      display: flex;
+      align-items: center;
+      gap: .5rem;
+      font-size: .82rem;
+      font-weight: 700;
+      color: var(--slate-700);
+    }
+
+    .pdf-download-link {
+      display: inline-flex;
+      align-items: center;
+      gap: .4rem;
+      font-size: .75rem;
+      font-weight: 600;
+      color: var(--blue-600);
+      text-decoration: none;
+      padding: .3rem .7rem;
+      border-radius: 6px;
+      border: 1px solid var(--blue-100);
+      background: var(--blue-50);
+      transition: background .15s;
+    }
+
+    .pdf-download-link:hover { background: #dbeafe; }
+
+    .pdf-frame-wrap {
+      width: 100%;
+      background: #525659;
+    }
+
+    .pdf-iframe {
+      width: 100%;
+      height: 620px;
+      border: none;
+      display: block;
+    }
+
+    @media (max-width: 600px) {
+      .pdf-iframe { height: 420px; }
+      .pdf-header { padding: 1rem 1.25rem; }
+    }
+
+    /* === PRINT STYLES === */
+    @media print {
+      @page { margin: 1cm; }
+      body { background: white !important; padding: 0 !important; }
+      .portal-wrapper {
+        box-shadow: none !important;
+        border: 1px solid #e2e8f0 !important;
+        border-radius: 12px !important;
+        margin: 0 !important;
+        max-width: 100% !important;
+      }
+      .copy-btn, .download-btn, .print-note { display: none !important; }
+      .portal-header, .portal-footer {
+        background: #0f172a !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+      .verified-banner {
+        background: #ecfdf5 !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+      .shield-icon { background: #10b981 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      .pdf-section { display: none !important; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="portal-wrapper">
+
+  <!-- HEADER -->
+  <div class="portal-header">
+    <div class="logo-wrap">
+      <svg width="220" height="82" viewBox="0 0 800 300" xmlns="http://www.w3.org/2000/svg" aria-label="Logic Software Logo">
+        <rect width="800" height="300" fill="transparent"/>
+        <g transform="translate(50,50)">
+          <!-- L -->
+          <path d="M0 0 H60 V130 H110 V175 H0 V0Z" fill="#FFFFFF"/>
+          <!-- Light bulb -->
+          <g transform="translate(130,-10)">
+            <path d="M55 0 C24.6 0 0 24.6 0 55 C0 80 15 95 25 105 L25 125 H85 L85 105 C95 95 110 80 110 55 C110 24.6 85.4 0 55 0Z" fill="#E32626"/>
+            <path d="M30 130 H80 V138 Q55 145 30 138 Z" fill="#E32626"/>
+            <path d="M32 142 H78 V150 Q55 157 32 150 Z" fill="#E32626"/>
+            <path d="M40 154 H70 L55 165 Z" fill="#E32626"/>
+            <g transform="translate(38,35) scale(0.8)" fill="#000">
+              <path d="M15 0 C10 0 5 5 5 10 V20 C5 25 0 28 0 30 C0 32 5 35 5 40 V50 C5 55 10 60 15 60 H20 V55 H15 C12 55 10 52 10 48 V38 C10 32 5 30 5 30 C5 30 10 28 10 22 V12 C10 8 12 5 15 5 H20 V0 H15Z"/>
+              <path d="M30 0 C35 0 40 5 40 10 V20 C40 25 45 28 45 30 C45 32 40 35 40 40 V50 C40 55 35 60 30 60 H25 V55 H30 C33 55 35 52 35 48 V38 C35 32 40 30 40 30 C40 30 35 28 35 22 V12 C35 8 33 5 30 5 H25 V0 H30Z"/>
+            </g>
+          </g>
+          <!-- G -->
+          <g transform="translate(260,0)">
+            <path d="M100 85 V175 H50 C20 175 0 155 0 125 V50 C0 20 20 0 50 0 H100 V45 H55 C45 45 45 55 45 55 V120 C45 120 45 130 55 130 H65 V85 H100Z" fill="#FFFFFF"/>
+          </g>
+          <!-- I -->
+          <g transform="translate(385,0)">
+            <rect x="0" y="30" width="45" height="145" fill="#FFFFFF"/>
+            <rect x="35" y="-10" width="40" height="40" fill="#E32626"/>
+          </g>
+          <!-- C -->
+          <g transform="translate(480,0)">
+            <path d="M100 45 V0 H50 C20 0 0 20 0 50 V125 C0 155 20 175 50 175 H100 V130 H55 C45 130 45 120 45 120 V55 C45 55 45 45 55 45 H100Z" fill="#FFFFFF"/>
+          </g>
+          <!-- tagline -->
+          <g transform="translate(0,220)">
+            <rect x="0" y="10" width="40" height="2" fill="#94A3B8"/>
+            <rect x="520" y="10" width="40" height="2" fill="#94A3B8"/>
+            <text x="280" y="20" font-family="DM Sans, Arial, sans-serif" font-size="28" font-weight="700" letter-spacing="12" fill="#94A3B8" text-anchor="middle">SOFTWARE LTD.</text>
+          </g>
+        </g>
+      </svg>
+    </div>
+    <h1 class="portal-title">Document Verification Portal</h1>
+    <p class="portal-ref">Reference: LSL/NOC/HRD/04/565/2026/03</p>
+  </div>
+
+  <!-- VERIFIED BANNER -->
+  <div class="verified-banner">
+    <div class="shimmer-overlay"></div>
+    <div class="verified-left">
+      <div class="shield-icon">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+          <polyline points="9 12 11 14 15 10"/>
+        </svg>
+      </div>
+      <div>
+        <p class="verified-label">Authenticity Verified</p>
+        <p class="verified-sub">This document was officially issued by Logic Software Ltd.</p>
+      </div>
+    </div>
+    <div class="verified-ts">
+      <p class="ts-label">Timestamp</p>
+      <p class="ts-value">2026-03-30 15:23:00</p>
+    </div>
+  </div>
+
+  <!-- BODY -->
+  <div class="portal-body">
+
+    <div class="section-header">
+      <h3 class="section-title">Subject Details</h3>
+      <div class="badge-row">
+        <button class="copy-btn" id="copyBtn" onclick="copyDetails()">
+          <svg id="copyIcon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+          </svg>
+          <span id="copyLabel">Copy Details</span>
+        </button>
+        <span class="type-badge">No Objection Certificate</span>
+      </div>
+    </div>
+
+    <div class="details-grid">
+
+      <div class="detail-item">
+        <div class="detail-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+          </svg>
+        </div>
+        <div>
+          <p class="detail-label">Employee Name</p>
+          <p class="detail-value">Abdulla Bepary</p>
+        </div>
+      </div>
+
+      <div class="detail-item">
+        <div class="detail-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="4" y1="9" x2="20" y2="9"/><line x1="4" y1="15" x2="20" y2="15"/><line x1="10" y1="3" x2="8" y2="21"/><line x1="16" y1="3" x2="14" y2="21"/>
+          </svg>
+        </div>
+        <div>
+          <p class="detail-label">Employee Code</p>
+          <p class="detail-value mono">4434</p>
+        </div>
+      </div>
+
+      <div class="detail-item">
+        <div class="detail-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
+          </svg>
+        </div>
+        <div>
+          <p class="detail-label">Designation</p>
+          <p class="detail-value">Senior Executive — Implementation</p>
+        </div>
+      </div>
+
+      <div class="detail-item">
+        <div class="detail-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+          </svg>
+        </div>
+        <div>
+          <p class="detail-label">Verified Tenure</p>
+          <p class="detail-value">Sep 01, 2022 — Mar 30, 2026</p>
+        </div>
+      </div>
+
+    </div>
+
+    <hr class="divider">
+
+    <!-- TRANSCRIPT -->
+    <div class="transcript-block">
+      <div class="transcript-heading">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/>
+        </svg>
+        <span>Verified Digital Transcript</span>
+      </div>
+      <div class="transcript-text">
+        <p>To Whom It May Concern</p>
+        <p>This is to certify that Mr. Abdulla Bepary, Employee Code: 4434, has served as project implementor and coordinator in the Implementation Department of Logic Software Ltd. from September 01, 2022 to March 30, 2026.</p>
+        <p>During his tenure with our organization, we found him to be honest, sincere, and hardworking. He has completed all his assigned responsibilities satisfactorily.</p>
+        <p>Mr. Bepary has successfully completed the handover of all digital assets, client relationship logs, and system access credentials.</p>
+        <p>We have no objection to his joining any other organization. He is being relieved from his duties with effect from March 31, 2026. We wish him success in his future endeavors. Any cooperation extended to him will be highly appreciated.</p>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- FOOTER -->
+  <div class="portal-footer">
+    <div class="footer-main">
+      <div>
+        <p class="signatory-label">Authorized Signatory</p>
+        <p class="signatory-name">Md. Gazi Kawser</p>
+        <p class="signatory-role">General Manager, HR &amp; Admin</p>
+        <p class="signatory-org">Logic Software Limited</p>
+      </div>
+      <div class="contact-info">
+        <div class="contact-row">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          House 85, Rd 4, Blk B, Banani, Dhaka
+        </div>
+        <div class="contact-row">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+          <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="5c35323a331c30333b353f2f333a283e38723f3331">[email&#160;protected]</a>
+        </div>
+        <div class="contact-row">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 13.5a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 2.69H6.6a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 10.91a16 16 0 0 0 6.09 6.09l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+          +88 02 8835670 - 1
+        </div>
+        <a href="https://www.logicsoftbd.com" target="_blank" rel="noopener noreferrer" class="contact-row" style="justify-content:flex-end;">www.logicsoftbd.com</a>
+      </div>
+    </div>
+
+    <div class="footer-bottom">
+      <span class="hash-code">SECURE_HASH: 8f4e2a1b9c8d...7f6e5d4c3b2a1</span>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;">
+        <a class="download-btn" href="https://drive.google.com/uc?export=download&id=1metPpVe_-dKxex2XqeWFBWtYVTP0J4MH" target="_blank" rel="noopener noreferrer">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/>
+          </svg>
+          Download / Print PDF
+        </a>
+        <p class="print-note">Opens the official document record for download or printing.</p>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+  function copyDetails() {
+    const text = `Employee Name: Abdulla Bepary
+Employee Code: 4434
+Designation: Senior Executive - Implementation
+Verified Tenure: Sep 01, 2022 — Mar 30, 2026
+Ref No: LSL/NOC/HRD/04/565/2026/03`.trim();
+
+    navigator.clipboard.writeText(text).then(() => {
+      const btn = document.getElementById('copyBtn');
+      const label = document.getElementById('copyLabel');
+      const icon = document.getElementById('copyIcon');
+      btn.classList.add('copied');
+      label.textContent = 'Copied';
+      icon.innerHTML = '<polyline points="20 6 9 17 4 12"/>';
+      icon.setAttribute('viewBox','0 0 24 24');
+      setTimeout(() => {
+        btn.classList.remove('copied');
+        label.textCo
